@@ -134,4 +134,4 @@ If you enjoy Game Night, consider supporting its development:
 
 Nic Kraneis - [GitHub](https://github.com/NicKraneis)
 
-Project Link: [https://github.com/NicKraneis/Gamenight](https://github.com/NicKraneis/Gamenight)
+Project Link: [https://github.com/NicKraneis/play-game-night-public](https://github.com/NicKraneis/play-game-night-public)
