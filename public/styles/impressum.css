@@ -1,0 +1,140 @@
+body {
+    min-height: 90vh;
+    max-width: 600px;
+    margin: auto;
+    background-image: radial-gradient(
+      circle,
+      #411c46,
+      #341c3f,
+      #281a36,
+      #1e172c,
+      #161422,
+      #13121d,
+      #100f19,
+      #0c0c14,
+      #0c0c14,
+      #0c0c14,
+      #0c0c14,
+      #0c0c14
+    );
+  }
+  
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  a,
+  p {
+    color: white;
+    font-family: "Bricolage Grotesque";
+    font-weight: 300;
+
+  }
+  
+  h1 {
+    font-family: "Monigue";
+    color: white;
+    font-size: 80px;
+    font-weight: normal;
+    margin-bottom: 50px;
+    text-align: center;
+  }
+  
+  h2 {
+    font-family: "Monigue";
+    color: white;
+    font-size: 40px;
+    font-weight: normal;
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    font-family: "Bricolage Grotesque";
+    color: white;
+    font-size: 21px;
+    font-weight: 600;
+  }
+  
+  h4 {
+    font-family: "Bricolage Grotesque";
+    color: white;
+    font-size: 16px;
+    font-weight: 200;
+  }
+
+
+
+
+  @font-face {
+    font-family: "Monigue";
+    src: url("../assets/fonts/Monigue.woff2");
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  /* bricolage-grotesque-200 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 200;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-200.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-300 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 300;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-300.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-regular - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 400;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-regular.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-500 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 500;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-500.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-600 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 600;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-600.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-700 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 700;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-700.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* bricolage-grotesque-800 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 800;
+    src: url("../assets/fonts/bricolage-grotesque-v7-latin-800.woff2")
+      format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  

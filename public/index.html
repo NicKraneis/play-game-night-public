@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Meta Tags und Resourcen -->
+    <title>Game Night</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/styles/main.css" />
+    <script src="/js/main.js" defer></script>
+  </head>
+  <body>
+    <!-- Donation Button -->
+    <div class="donate">
+      <a target="_blank" href="https://www.patreon.com/c/nikra">
+        <img src="./assets/img/donate_love.png" alt="Donation Heart" />
+      </a>
+    </div>
+
+    <div class="container">
+      <!-- Start Section: Login und Raumerstellung -->
+      <div id="start-section">
+        <h1>
+          Welcome to the <br />
+          Game Night
+        </h1>
+
+        <div class="log-grid">
+          <!-- Join Room Section -->
+          <h3 class="join-heading">Join a room</h3>
+
+          <!-- Avatar Selection -->
+          <div class="avatar-selector">
+            <h4>Choose Avatar</h4>
+            <div class="avatar-carousel">
+              <button class="carousel-btn prev">
+                <i class="arrow left"></i>
+              </button>
+              <div class="avatar-display">
+                <img
+                  id="selected-avatar"
+                  src="/assets/img/avatar_1.png"
+                  data-avatar-id="1"
+                />
+              </div>
+              <button class="carousel-btn next">
+                <i class="arrow right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Login Fields -->
+          <input
+            class="log-field"
+            type="text"
+            maxlength="20"
+            id="player-name"
+            placeholder="Your Name"
+          />
+          <input
+            class="log-field"
+            type="text"
+            id="room-code"
+            placeholder="Room Code"
+          />
+          <button class="log-button1" id="join-room">Join room</button>
+
+          <!-- Separator -->
+          <h2 class="or-heading">OR</h2>
+
+          <!-- Create Room Section -->
+          <h3 class="create-heading">Create a room</h3>
+          <img
+            class="gamemaster-avatar"
+            src="./assets/img/gamemaster_avatar.png"
+            alt="Gamemaster-Avatar"
+          />
+          <button class="log-button" id="create-room">Create room</button>
+        </div>
+      </div>
+
+      <!-- Game Section: Hauptspielbereich -->
+      <div id="game-section" class="game-section">
+        <!-- Sound Control -->
+        <div class="sound-control">
+          <button
+            id="toggle-sound"
+            class="sound-toggle"
+            aria-label="Toggle sounds"
+            role="switch"
+            aria-checked="true"
+          >
+            <span class="sound-icon">🔊</span>
+            <span class="visually-hidden">Sound is on</span>
+          </button>
+        </div>
+
+        <!-- Room Code Display -->
+        <h2>
+          Room:
+          <span
+            id="current-room"
+            class="room-code"
+            title="Click to copy"
+          ></span>
+        </h2>
+
+        <!-- Leaderboard -->
+        <div class="leaderboard" id="leaderboard">
+          <h3>Leaderboard</h3>
+        </div>
+
+        <!-- Gamemaster Interface -->
+        <div id="gamemaster-section" class="game-section inner-container">
+          <!-- Random Number Generator -->
+          <div id="random-generator-controls" class="generator-controls">
+            <h3>Random Roll</h3>
+            <div class="random-number-section">
+              <div id="random-number-display-gm" class="random-number"></div>
+            </div>
+            <input
+              type="number"
+              id="min-number"
+              class="generator-input gi1"
+              placeholder="Min"
+              min="0"
+            />
+            <input
+              type="number"
+              id="max-number"
+              class="generator-input gi2"
+              placeholder="Max"
+              min="0"
+            />
+            <button id="roll-button" class="gm-button">Roll</button>
+          </div>
+
+          <!-- Buzzer Controls -->
+          <div class="controls-panel">
+            <h3>Buzzer</h3>
+            <div id="buzzer-status" class="buzzer-status">
+              <div id="current-buzzer"></div>
+            </div>
+            <div class="gm-controls">
+              <button class="gm-button" id="release-buzzers">Unlock</button>
+              <button class="gm-button" id="lock-buzzers">Lock</button>
+            </div>
+          </div>
+
+          <!-- Timer Controls -->
+          <div id="timer-section" class="timer-section">
+            <h3>Timer</h3>
+            <div id="timer-display-master"></div>
+            <div id="timer-controls"></div>
+          </div>
+
+          <!-- Gamemaster Message Section -->
+          <div class="gamemaster-note-section">
+            <h3>Your message to the players</h3>
+            <textarea
+              id="gamemaster-note"
+              class="note-field"
+              maxlength="500"
+              placeholder="Write a message to your players..."
+              oninput="updateGamemasterNote(this.value)"
+            ></textarea>
+            <div class="gm-controls">
+              <button class="gm-button" id="lock-all-answers">
+                Lock Answers
+              </button>
+              <button class="gm-button" id="unlock-all-answers">
+                Unlock Answers
+              </button>
+            </div>
+          </div>
+
+          <!-- Player Notes Display -->
+          <div id="showmaster-notes" class="spieler-textfelder">
+            <h3>Player texts</h3>
+            <div id="all-player-notes"></div>
+          </div>
+        </div>
+
+        <!-- Player Interface -->
+        <div id="player-section" class="game-section inner-container">
+          <!-- Random Number Display -->
+          <div class="random-number-section-player">
+            <h3>Random Roll</h3>
+            <div id="random-number-display" class="random-number"></div>
+          </div>
+
+          <!-- Buzzer Button -->
+          <button id="buzzer" class="buzzer">BUZZ</button>
+
+          <!-- Timer Display -->
+          <div id="timer-area" class="timer-area">
+            <h3>Timer</h3>
+            <div id="timer-display-player"></div>
+          </div>
+
+          <!-- Gamemaster Message Display -->
+          <div class="gamemaster-message">
+            <h3>Showmaster</h3>
+            <div id="gamemaster-message" class="note-field" readonly></div>
+          </div>
+
+          <!-- Player Note Input -->
+          <div id="player-note-section">
+            <h3>Your text</h3>
+            <textarea
+              id="player-note"
+              class="note-field"
+              maxlength="500"
+              placeholder="Your notes..."
+            ></textarea>
+            <button class="player-button" id="lock-answer">
+              Lock in Answer
+            </button>
+          </div>
+        </div>
+
+        <!-- Buzzer Notifications -->
+        <div id="buzz-notifications"></div>
+      </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio
+      id="buzzer-sound"
+      src="/assets/sounds/buzzer-press-sound.mp3"
+      preload="auto"
+    ></audio>
+    <audio
+      id="countdown-sound"
+      src="/assets/sounds/countdown.mp3"
+      preload="auto"
+    ></audio>
+
+    <!-- Footer -->
+    <footer>
+      <a target="_blank" href="https://www.patreon.com/c/nikra">Support Game Night <3 </a>
+      <a target="_blank" href="https://github.com/NicKraneis/Gamenight">Github Project</a>
+      <a target="_blank" href="./impressum.html">Impressum © 2024 Nic Kraneis</a>
+    </footer>
+  </body>
+</html>
