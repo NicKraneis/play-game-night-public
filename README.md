@@ -97,8 +97,7 @@ Gamenight/
 ## Known Issues
 
 - Browser refresh will disconnect the user from the room
-- Sound effects might not work on some mobile browsers
-- See [Issues](https://github.com/YourUsername/Gamenight/issues) for more
+- Leaving mobile Broswer app will disconnect the user from the room
 
 # Licensing
 
