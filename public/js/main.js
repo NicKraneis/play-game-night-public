@@ -558,14 +558,17 @@ socket.on("notes-update", (notes) => {
       // Add locked class if note is locked
       const textareaClass = data.locked ? "note-field locked" : "note-field";
 
-      noteDiv.innerHTML = `
-        <div class="player-note-header">${
-          data.playerName || "Unknown Player"
-        }</div>
-        <textarea class="${textareaClass}" readonly>${
-        data.text || ""
-      }</textarea>
-      `;
+      const header = document.createElement('div');
+      header.className = 'player-note-header';
+      header.textContent = data.playerName || "Unknown Player";
+
+      const textarea = document.createElement('textarea');
+      textarea.className = textareaClass;
+      textarea.readOnly = true;
+      textarea.value = data.text || "";
+
+      noteDiv.appendChild(header);
+      noteDiv.appendChild(textarea);
       notesContainer.appendChild(noteDiv);
     });
   }
@@ -574,7 +577,7 @@ socket.on("notes-update", (notes) => {
 socket.on("gamemaster-note-update", (note) => {
   if (!isGamemaster) {
     const messageDisplay = document.getElementById("gamemaster-message");
-    messageDisplay.textContent = note.text;
+    messageDisplay.value = note.text;
   }
 });
 

@@ -9,6 +9,7 @@ const helmet = require("helmet");
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
+const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 // ========================================
 // Global Variables
@@ -23,7 +24,12 @@ const playerPoints = {
 // Rate Limiter Setup
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 Minute
-  max: 1000, // Request limit per IP
+  max: 500, // Request limit per IP
+});
+
+const rateLimiter = new RateLimiterMemory({
+  points: 30,    // Anzahl erlaubter Events
+  duration: 10,  // pro 10 Sekunden
 });
 
 // Express Setup
@@ -134,6 +140,15 @@ function deleteRoom(roomCode) {
   delete rooms[roomCode];
 }
 
+// Validation for JS
+function validateGamemaster(socket, roomCode) {
+  return rooms[roomCode] && rooms[roomCode].host === socket.id;
+}
+
+function validatePlayer(socket, roomCode) {
+  return rooms[roomCode] && rooms[roomCode].players[socket.id] && rooms[roomCode].host !== socket.id;
+}
+
 function startRoomTimer(roomCode) {
   const INACTIVE_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
   setTimeout(() => {
@@ -151,8 +166,15 @@ function startRoomTimer(roomCode) {
 // Socket.IO Event Handlers
 // ========================================
 io.on("connection", (socket) => {
-  console.log("New Client connected");
-  let currentRoom = null;
+  // Rate Limiting für alle Events
+  socket.use(async (_, next) => {
+    try {
+      await rateLimiter.consume(socket.id);
+      next();
+    } catch (error) {
+      next(new Error('Rate limit exceeded'));
+    }
+  });
 
   // ----------------------------------------
   // Room Creation and Joining
@@ -255,17 +277,17 @@ io.on("connection", (socket) => {
   socket.on("lock-player-answer", (data) => {
     console.log("Received lock answer:", data);
     try {
-      const { roomCode } = data;
-      const room = rooms[roomCode];
-
-      if (room && room.players[socket.id]) {
-        room.lockedAnswers.add(socket.id);
-        if (room.notes[socket.id]) {
-          room.notes[socket.id].locked = true;
-        }
-        io.to(roomCode).emit("player-answer-locked", { playerId: socket.id });
-        io.to(room.host).emit("notes-update", room.notes);
+      if (!validatePlayer(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only players can lock their answers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      room.lockedAnswers.add(socket.id);
+      if (room.notes[socket.id]) {
+        room.notes[socket.id].locked = true;
+      }
+      io.to(data.roomCode).emit("player-answer-locked", { playerId: socket.id });
+      io.to(room.host).emit("notes-update", room.notes);
     } catch (error) {
       console.error("Lock answer error:", error);
     }
@@ -273,21 +295,21 @@ io.on("connection", (socket) => {
 
   socket.on("lock-all-answers", (data) => {
     try {
-      const { roomCode } = data;
-      const room = rooms[roomCode];
-
-      if (room && room.host === socket.id) {
-        Object.keys(room.players).forEach((playerId) => {
-          if (playerId !== room.host) {
-            room.lockedAnswers.add(playerId);
-            if (room.notes[playerId]) {
-              room.notes[playerId].locked = true;
-            }
-          }
-        });
-        io.to(roomCode).emit("all-answers-locked");
-        io.to(room.host).emit("notes-update", room.notes);
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can lock all answers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      Object.keys(room.players).forEach((playerId) => {
+        if (playerId !== room.host) {
+          room.lockedAnswers.add(playerId);
+          if (room.notes[playerId]) {
+            room.notes[playerId].locked = true;
+          }
+        }
+      });
+      io.to(data.roomCode).emit("all-answers-locked");
+      io.to(room.host).emit("notes-update", room.notes);
     } catch (error) {
       console.error("Lock all answers error:", error);
     }
@@ -295,19 +317,19 @@ io.on("connection", (socket) => {
 
   socket.on("unlock-all-answers", (data) => {
     try {
-      const { roomCode } = data;
-      const room = rooms[roomCode];
-
-      if (room && room.host === socket.id) {
-        room.lockedAnswers.clear();
-        Object.keys(room.notes).forEach((playerId) => {
-          if (room.notes[playerId]) {
-            room.notes[playerId].locked = false;
-          }
-        });
-        io.to(roomCode).emit("all-answers-unlocked");
-        io.to(room.host).emit("notes-update", room.notes);
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can unlock answers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      room.lockedAnswers.clear();
+      Object.keys(room.notes).forEach((playerId) => {
+        if (room.notes[playerId]) {
+          room.notes[playerId].locked = false;
+        }
+      });
+      io.to(data.roomCode).emit("all-answers-unlocked");
+      io.to(room.host).emit("notes-update", room.notes);
     } catch (error) {
       console.error("Unlock all answers error:", error);
     }
@@ -319,20 +341,17 @@ io.on("connection", (socket) => {
   socket.on("update-note", (data) => {
     console.log("Received note update:", data);
     try {
-      const { roomCode, text } = data;
-      const room = rooms[roomCode];
-
-      if (room && room.players[socket.id]) {
-        const playerName = room.notes[socket.id].playerName;
-        room.notes[socket.id] = {
-          text: text,
-          playerName: playerName,
-        };
-
-        console.log("Updated notes for room:", room.notes);
-
-        io.to(room.host).emit("notes-update", room.notes);
+      if (!validatePlayer(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only players can update notes");
+        return;
       }
+      const room = rooms[data.roomCode];
+      const playerName = room.notes[socket.id].playerName;
+      room.notes[socket.id] = {
+        text: data.text,
+        playerName: playerName,
+      };
+      io.to(room.host).emit("notes-update", room.notes);
     } catch (error) {
       console.error("Note update error:", error);
     }
@@ -340,16 +359,13 @@ io.on("connection", (socket) => {
 
   socket.on("update-gamemaster-note", (data) => {
     try {
-      const { roomCode, text } = data;
-      const room = rooms[roomCode];
-
-      console.log("Received gamemaster note update:", { roomCode, text });
-
-      if (room && room.host === socket.id) {
-        room.gamemasterNote = text;
-        io.to(roomCode).emit("gamemaster-note-update", { text });
-        console.log("Broadcasted note to room:", roomCode);
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can update gamemaster notes");
+        return;
       }
+      const room = rooms[data.roomCode];
+      room.gamemasterNote = data.text;
+      io.to(data.roomCode).emit("gamemaster-note-update", { text: data.text });
     } catch (error) {
       console.error("Gamemaster note update error:", error);
     }
@@ -361,8 +377,12 @@ io.on("connection", (socket) => {
   socket.on("press-buzzer", (data) => {
     console.log("Received buzzer press:", data);
     try {
+      if (!validatePlayer(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only players can press the buzzer");
+        return;
+      }
       const room = rooms[data.roomCode];
-      if (room && room.buzzerActive && room.host !== socket.id) {
+      if (room && room.buzzerActive) {
         room.buzzerActive = false;
         io.to(data.roomCode).emit("buzzer-pressed", {
           playerId: socket.id,
@@ -376,11 +396,13 @@ io.on("connection", (socket) => {
 
   socket.on("release-buzzers", (data) => {
     try {
-      const room = rooms[data.roomCode];
-      if (room && room.host === socket.id) {
-        room.buzzerActive = true;
-        io.to(data.roomCode).emit("buzzers-released");
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can release buzzers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      room.buzzerActive = true;
+      io.to(data.roomCode).emit("buzzers-released");
     } catch (error) {
       console.error("Release buzzers error:", error);
     }
@@ -388,11 +410,13 @@ io.on("connection", (socket) => {
 
   socket.on("lock-buzzers", (data) => {
     try {
-      const room = rooms[data.roomCode];
-      if (room && room.host === socket.id) {
-        room.buzzerActive = false;
-        io.to(data.roomCode).emit("buzzers-locked");
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can lock buzzers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      room.buzzerActive = false;
+      io.to(data.roomCode).emit("buzzers-locked");
     } catch (error) {
       console.error("Lock buzzers error:", error);
     }
@@ -403,27 +427,22 @@ io.on("connection", (socket) => {
   // ----------------------------------------
   socket.on("update-points", (data) => {
     try {
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can update points");
+        return;
+      }
       const { roomCode, playerId, points } = data;
       const room = rooms[roomCode];
+      room.players[playerId].points += points;
 
-      if (room && room.host === socket.id) {
-        room.players[playerId].points += points;
-
-        const deviceId = room.players[playerId].deviceId;
-        if (deviceId) {
-          if (!playerPoints[roomCode]) {
-            playerPoints[roomCode] = {};
-          }
-          playerPoints[roomCode][deviceId] = room.players[playerId].points;
-          console.log("Updated points cache:", {
-            room: roomCode,
-            device: deviceId,
-            points: playerPoints[roomCode][deviceId],
-          });
+      const deviceId = room.players[playerId].deviceId;
+      if (deviceId) {
+        if (!playerPoints[roomCode]) {
+          playerPoints[roomCode] = {};
         }
-
-        io.to(roomCode).emit("player-list-update", room.players);
+        playerPoints[roomCode][deviceId] = room.players[playerId].points;
       }
+      io.to(roomCode).emit("player-list-update", room.players);
     } catch (error) {
       console.error("Update points error:", error);
     }
@@ -431,14 +450,15 @@ io.on("connection", (socket) => {
 
   socket.on("start-timer", (data) => {
     try {
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can start the timer");
+        return;
+      }
       const { roomCode, duration } = data;
       const room = rooms[roomCode];
-
-      if (room && room.host === socket.id) {
-        io.to(roomCode).emit("timer-started", {
-          duration: duration,
-        });
-      }
+      io.to(roomCode).emit("timer-started", {
+        duration: duration,
+      });
     } catch (error) {
       console.error("Timer error:", error);
     }
@@ -446,12 +466,13 @@ io.on("connection", (socket) => {
 
   socket.on("reset-timer", (data) => {
     try {
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can reset the timer");
+        return;
+      }
       const { roomCode } = data;
       const room = rooms[roomCode];
-
-      if (room && room.host === socket.id) {
-        io.to(roomCode).emit("timer-reset");
-      }
+      io.to(roomCode).emit("timer-reset");
     } catch (error) {
       console.error("Timer reset error:", error);
     }
@@ -462,14 +483,15 @@ io.on("connection", (socket) => {
   // ----------------------------------------
   socket.on("generate-number", (data) => {
     try {
-      const room = rooms[data.roomCode];
-      if (room && room.host === socket.id) {
-        const min = Math.ceil(data.min);
-        const max = Math.floor(data.max);
-        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-
-        io.to(data.roomCode).emit("number-generated", { number: randomNumber });
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only gamemaster can generate numbers");
+        return;
       }
+      const room = rooms[data.roomCode];
+      const min = Math.ceil(data.min);
+      const max = Math.floor(data.max);
+      const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+      io.to(data.roomCode).emit("number-generated", { number: randomNumber });
     } catch (error) {
       console.error("Random number generation error:", error);
     }
