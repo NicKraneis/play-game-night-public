@@ -1,3 +1,52 @@
+:root {
+  /* Farbpalette */
+  --bg-gradient-start: #411c46;
+  --bg-gradient-2: #341c3f;
+  --bg-gradient-3: #281a36;
+  --bg-gradient-4: #1e172c;
+  --bg-gradient-5: #161422;
+  --bg-gradient-6: #13121d;
+  --bg-gradient-7: #100f19;
+  --bg-gradient-end: #0c0c14;
+
+  --text-light: white;
+  --text-muted: #64647e;
+  --text-muted-light: #ccc;
+
+  --primary-pink: #f2388f;
+  --primary-yellow: #f2d43d;
+  --primary-green: #16d866;
+
+  --danger-red: #8b2635;
+  --danger-red-border: #a73040;
+  --danger-red-hover: #a73040;
+  --danger-red-shadow: rgba(139, 38, 53, 0.4);
+
+  --dark-purple-bg: #1b1b2c;
+  --dark-purple-bg-transparent: #1b1b2caf;
+  --medium-purple-bg: #2a2a42;
+  --medium-purple-bg-hover: #3a3a52;
+  --medium-purple-bg-transparent: rgba(42, 42, 66, 0.8);
+  --light-purple-bg-transparent: rgba(84, 84, 133, 0.2);
+
+  --purple-border: #5454857c;
+  --purple-shadow: #545485;
+  --purple-shadow-light: rgba(84, 84, 133, 0.5);
+  --purple-shadow-darker: rgba(84, 84, 133, 0.3);
+  
+  --placeholder-text: #3c3c50;
+  --placeholder-border: #3c3c5098;
+  
+  --leaderboard-base: rgb(84, 84, 133);
+  --leaderboard-rank1: rgb(187, 160, 45);
+  --leaderboard-rank2: rgb(117, 134, 144);
+  --leaderboard-rank3: rgb(186, 120, 84);
+
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-shadow: rgba(0, 0, 0, 0.4);
+  --transparent: rgba(0, 0, 0, 0);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,18 +56,18 @@ body {
   min-height: 90vh;
   background-image: radial-gradient(
     circle,
-    #411c46,
-    #341c3f,
-    #281a36,
-    #1e172c,
-    #161422,
-    #13121d,
-    #100f19,
-    #0c0c14,
-    #0c0c14,
-    #0c0c14,
-    #0c0c14,
-    #0c0c14
+    var(--bg-gradient-start),
+    var(--bg-gradient-2),
+    var(--bg-gradient-3),
+    var(--bg-gradient-4),
+    var(--bg-gradient-5),
+    var(--bg-gradient-6),
+    var(--bg-gradient-7),
+    var(--bg-gradient-end),
+    var(--bg-gradient-end),
+    var(--bg-gradient-end),
+    var(--bg-gradient-end),
+    var(--bg-gradient-end)
   );
 }
 
@@ -35,7 +84,7 @@ h5,
 h6,
 a,
 p {
-  color: white;
+  color: var(--text-light);
   font-family: "Bricolage Grotesque";
   font-weight: 300;
   padding: 0;
@@ -48,7 +97,7 @@ p {
 
 h1 {
   font-family: "Monigue";
-  color: white;
+  color: var(--text-light);
   font-size: 80px;
   font-weight: normal;
   margin-bottom: 50px;
@@ -57,21 +106,21 @@ h1 {
 
 h2 {
   font-family: "Monigue";
-  color: white;
+  color: var(--text-light);
   font-size: 40px;
   font-weight: normal;
 }
 
 h3 {
   font-family: "Bricolage Grotesque";
-  color: white;
+  color: var(--text-light);
   font-size: 21px;
   font-weight: 600;
 }
 
 h4 {
   font-family: "Bricolage Grotesque";
-  color: white;
+  color: var(--text-light);
   font-size: 16px;
   font-weight: 200;
 }
@@ -93,12 +142,12 @@ h4 {
 .log-button {
   height: 50px;
   max-width: 300px;
-  background-color: #f2388f;
+  background-color: var(--primary-pink);
   border-radius: 42px;
-  border: 1px solid #a7185d98;
+  border: none;
   display: inline-block;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--text-light);
   font-family: "Bricolage Grotesque";
   font-size: 21px;
   font-weight: 500;
@@ -114,19 +163,19 @@ h4 {
 }
 
 .log-button:hover {
-  background-color: #f2388f;
-  box-shadow: 0px 0px 20px 0px #f2388f;
+  background-color: var(--primary-pink);
+  box-shadow: 0px 0px 20px 0px var(--primary-pink);
 }
 
 .log-button1 {
   height: 50px;
   max-width: 300px;
-  background-color: #f2d43d;
+  background-color: var(--primary-yellow);
+  border: none;
   border-radius: 42px;
-  border: 1px solid #8f7b1a85;
   display: inline-block;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--text-light);
   font-family: "Bricolage Grotesque";
   font-weight: 500;
   font-size: 21px;
@@ -141,30 +190,30 @@ h4 {
 }
 
 .log-button1:hover {
-  background-color: #f2d43d;
-  box-shadow: 0px 0px 20px 0px #f2d43d;
+  background-color: var(--primary-yellow);
+  box-shadow: 0px 0px 20px 0px var(--primary-yellow);
 }
 
 .log-field {
-  background-color: #1b1b2c;
+  background-color: var(--dark-purple-bg);
   border-radius: 42px;
   border-style: solid;
-  border-color: #3c3c5098;
-  color: white;
+  border-color: var(--placeholder-border);
+  color: var(--text-light);
   padding-left: 20px;
   height: 50px;
 }
 
 .log-field::placeholder {
   font-family: "Bricolage Grotesque";
-  color: #3c3c50;
+  color: var(--placeholder-text);
   opacity: 1; /* Firefox */
 }
 
 .log-field::-ms-input-placeholder {
   /* Edge 12 -18 */
   font-family: "Bricolage Grotesque";
-  color: #3c3c50;
+  color: var(--placeholder-text);
   opacity: 1;
 }
 
@@ -207,8 +256,8 @@ h4 {
   height: 100px;
   overflow: hidden;
   border-radius: 50%;
-  border: 2px solid #5454857c;
-  background-color: #0c0c14;
+  border: 2px solid var(--purple-border);
+  background-color: var(--bg-gradient-end);
 }
 
 .avatar-display img {
@@ -216,24 +265,24 @@ h4 {
 }
 
 .carousel-btn {
-  color: white;
+  color: var(--text-light);
   padding: 10px 15px;
   cursor: pointer;
   transition: all 0.2s;
   height: 50px;
   width: auto;
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
   border-radius: 42px;
-  border: 1px solid #5454857c;
+  border: 1px solid var(--purple-border);
 }
 
 .carousel-btn:hover {
-  background-color: #2a2a42;
-  box-shadow: 0px 0px 20px 0px #545485;
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 20px 0px var(--purple-shadow);
 }
 
 .arrow {
-  border: solid rgb(255, 255, 255);
+  border: solid var(--text-light);
   border-width: 0 3px 3px 0;
   display: inline-block;
   padding: 3px;
@@ -314,10 +363,10 @@ h4 {
 }
 
 .inner-container {
-  background-color: #1b1b2caf;
+  background-color: var(--dark-purple-bg-transparent);
   border-radius: 30px;
   border-width: 2px;
-  border-color: #5454857c;
+  border-color: var(--purple-border);
   border-style: solid;
   grid-column-start: 2;
   grid-column-end: 3;
@@ -325,15 +374,73 @@ h4 {
   grid-row-end: 3;
 }
 
+/* Room Code Display and Toggle */
+.room-code-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .room-code {
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: 8px 15px;
+  border-radius: 10px;
   transition: all 0.2s;
+  background-color: var(--medium-purple-bg-transparent);
+  border: 1px solid var(--purple-border);
+  font-family: "Bricolage Grotesque";
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-light);
+  width: 200px;
+  text-align: center;
+  user-select: none;
 }
 
 .room-code:hover {
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow-light);
+}
+
+.room-code-toggle {
+  background: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 18px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.room-code-toggle:hover {
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
+  background-color: var(--medium-purple-bg-hover);
+  transform: scale(1.05);
+}
+
+.room-code-toggle:focus {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+/* Screen reader support */
+.room-code-toggle .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .sound-control {
@@ -343,24 +450,24 @@ h4 {
 }
 
 .sound-toggle {
-  background: #2a2a42;
-  border: 1px solid #5454857c;
+  background: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
   border-radius: 50%;
   width: 44px;
   height: 44px;
   cursor: pointer;
-  color: white;
+  color: var(--text-light);
   font-size: 20px;
   transition: all 0.2s;
   padding: 8px;
 }
 
 .sound-toggle:hover {
-  box-shadow: 0px 0px 10px 0px #5454859a;
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
 }
 
 .sound-toggle:focus {
-  outline: 2px solid #f2388f;
+  outline: 2px solid var(--primary-pink);
   outline-offset: 2px;
 }
 
@@ -387,10 +494,10 @@ h4 {
 }
 
 .generator-input {
-  background-color: #2a2a42;
-  border: 1px solid #5454857c;
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
   border-radius: 10px;
-  color: white;
+  color: var(--text-light);
   padding: 10px;
   margin: 0 5px;
   width: 100px;
@@ -442,7 +549,7 @@ h4 {
 .random-number {
   font-family: "Monigue";
   font-size: 48px;
-  color: white;
+  color: var(--text-light);
   text-align: center;
 }
 
@@ -465,6 +572,10 @@ h4 {
   grid-template-rows: 200px auto;
   grid-gap: 20px;
   text-align: center;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 2;
+  grid-row-end: 3;
 }
 
 .controls-panel {
@@ -508,17 +619,17 @@ h4 {
 
 /* Leaderboard Styles */
 .leaderboard {
-  background-color: #1b1b2caf;
+  background-color: var(--dark-purple-bg-transparent);
   border-radius: 30px;
   border-width: 2px;
-  border-color: #5454857c;
+  border-color: var(--purple-border);
   border-style: solid;
   padding: 15px;
   margin: 0 0;
   grid-column-start: 1;
   grid-column-end: 2;
   grid-row-start: 2;
-  grid-row-end: 4;
+  grid-row-end: 3;
 }
 
 .leaderboard h3 {
@@ -528,7 +639,7 @@ h4 {
 .waiting-message {
   text-align: center;
   padding: 20px;
-  color: #64647e;
+  color: var(--text-muted);
   font-family: "Bricolage Grotesque";
   font-weight: 300;
 }
@@ -541,21 +652,21 @@ h4 {
   padding: 5px;
   margin: 5px 0;
   border-radius: 4px;
-  background: rgb(84, 84, 133);
+  background: var(--leaderboard-base);
   background: -moz-linear-gradient(
     90deg,
-    rgba(84, 84, 133, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-base) 7%,
+    var(--transparent) 100%
   );
   background: -webkit-linear-gradient(
     90deg,
-    rgba(84, 84, 133, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-base) 7%,
+    var(--transparent) 100%
   );
   background: linear-gradient(
     90deg,
-    rgba(84, 84, 133, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-base) 7%,
+    var(--transparent) 100%
   );
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#545485",endColorstr="#000000",GradientType=1);
 }
@@ -563,13 +674,12 @@ h4 {
 .rank {
   font-family: "Monigue";
   width: 30px;
-  color: white;
+  color: var(--text-light);
   font-size: 21px;
 }
 
 .player-avatar {
   width: 60px;
-  border-radius: 50%;
   margin-right: 10px;
 }
 
@@ -577,71 +687,71 @@ h4 {
   font-family: "Bricolage Grotesque";
   font-weight: 300;
   flex-grow: 1;
-  color: white;
+  color: var(--text-light);
 }
 
 .player-points {
   font-family: "Bricolage Grotesque";
   font-weight: 700;
   margin: 0 10px;
-  color: white;
+  color: var(--text-light);
 }
 
 /* Ranking Colors */
 .rank-1 {
-  background: rgb(187, 160, 45);
+  background: var(--leaderboard-rank1);
   background: -moz-linear-gradient(
     90deg,
-    rgba(187, 160, 45, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank1) 7%,
+    var(--transparent) 100%
   );
   background: -webkit-linear-gradient(
     90deg,
-    rgba(187, 160, 45, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank1) 7%,
+    var(--transparent) 100%
   );
   background: linear-gradient(
     90deg,
-    rgba(187, 160, 45, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank1) 7%,
+    var(--transparent) 100%
   );
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#bba02d",endColorstr="#000000",GradientType=1);
 }
 .rank-2 {
-  background: rgb(117, 134, 144);
+  background: var(--leaderboard-rank2);
   background: -moz-linear-gradient(
     90deg,
-    rgba(117, 134, 144, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank2) 7%,
+    var(--transparent) 100%
   );
   background: -webkit-linear-gradient(
     90deg,
-    rgba(117, 134, 144, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank2) 7%,
+    var(--transparent) 100%
   );
   background: linear-gradient(
     90deg,
-    rgba(117, 134, 144, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank2) 7%,
+    var(--transparent) 100%
   );
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#758690",endColorstr="#000000",GradientType=1);
 }
 .rank-3 {
-  background: rgb(186, 120, 84);
+  background: var(--leaderboard-rank3);
   background: -moz-linear-gradient(
     90deg,
-    rgba(186, 120, 84, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank3) 7%,
+    var(--transparent) 100%
   );
   background: -webkit-linear-gradient(
     90deg,
-    rgba(186, 120, 84, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank3) 7%,
+    var(--transparent) 100%
   );
   background: linear-gradient(
     90deg,
-    rgba(186, 120, 84, 1) 7%,
-    rgba(0, 0, 0, 0) 100%
+    var(--leaderboard-rank3) 7%,
+    var(--transparent) 100%
   );
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ba7854",endColorstr="#000000",GradientType=1);
 }
@@ -653,20 +763,366 @@ h4 {
   margin: 5px 0;
   padding: 3px 5px;
   width: 40px;
-  color: white;
+  color: var(--text-light);
   display: flex;
   gap: 5px;
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
   border-radius: 10px;
-  border: 1px solid #5454857c;
+  border: 1px solid var(--purple-border);
   display: inline-block;
   cursor: pointer;
   text-decoration: none;
 }
 
 .point-controls button:hover {
-  background-color: #2a2a42;
-  box-shadow: 0px 0px 10px 0px #5454859a;
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
+}
+
+/* Settings Button */
+.settings-button {
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+}
+
+.settings-button:hover {
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
+  background-color: var(--medium-purple-bg-hover);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+/* Modal Content */
+.player-settings-modal {
+  background: linear-gradient(135deg, var(--dark-purple-bg), var(--medium-purple-bg));
+  border-radius: 20px;
+  border: 2px solid var(--purple-border);
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 40px var(--modal-shadow);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--purple-border);
+  padding-bottom: 15px;
+}
+
+.modal-title {
+  font-family: "Bricolage Grotesque";
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-muted-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  color: var(--text-light);
+  background-color: var(--medium-purple-bg-hover);
+}
+
+/* Player Info Section */
+.player-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: var(--light-purple-bg-transparent);
+  border-radius: 10px;
+}
+
+.modal-player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 15px;
+  border: 2px solid var(--purple-border);
+}
+
+.player-info-text h4 {
+  font-family: "Bricolage Grotesque";
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-light);
+  margin: 0 0 5px 0;
+}
+
+.player-info-text p {
+  font-family: "Bricolage Grotesque";
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--text-muted-light);
+  margin: 0;
+}
+
+/* Settings Button */
+.settings-button {
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  position: relative;
+}
+
+.settings-button:hover {
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
+  background-color: var(--medium-purple-bg-hover);
+}
+
+/* Submenu Dropdown */
+.settings-submenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: linear-gradient(135deg, var(--dark-purple-bg), var(--medium-purple-bg));
+  border-radius: 8px;
+  border: 1px solid var(--purple-border);
+  box-shadow: 0 8px 20px var(--modal-shadow);
+  z-index: 100;
+  min-width: 150px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  margin-top: 5px;
+}
+
+.settings-submenu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  color: var(--text-light);
+  font-family: "Bricolage Grotesque";
+  font-size: 14px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid var(--purple-shadow-darker);
+}
+
+.submenu-item:last-child {
+  border-bottom: none;
+}
+
+.submenu-item:hover {
+  background-color: var(--purple-shadow-darker);
+}
+
+.submenu-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.submenu-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.submenu-item-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Points Section */
+.points-section {
+  margin-bottom: 25px;
+}
+
+.section-title {
+  font-family: "Bricolage Grotesque";
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-light);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.points-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 10px;
+  margin-bottom: 15px;
+}
+
+.point-btn {
+  font-family: "Bricolage Grotesque";
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s;
+  font-size: 14px;
+  height: 40px;
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+}
+
+.point-btn.negative {
+  color: var(--primary-pink);
+}
+
+.point-btn.positive {
+  color: var(--primary-green);
+}
+
+.point-btn.positive:hover, .point-btn.negative:hover {
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
+}
+
+/* Custom Points Input */
+.custom-points {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.custom-input {
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 8px;
+  color: var(--text-light);
+  padding: 8px 12px;
+  font-family: "Bricolage Grotesque";
+  font-size: 14px;
+  width: 500px;
+  text-align: center;
+}
+
+.custom-input:focus {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+  border-color: var(--primary-pink);
+}
+
+.apply-custom-btn {
+  height: 40px;
+  width: auto;
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  display: inline-block;
+  cursor: pointer;
+  color: var(--text-light);
+  font-family: "Bricolage Grotesque";
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s;
+
+  border-radius: 30px;
+  padding: 10px 20px;
+  margin: 10px 10px 10px 0;
+  width: 100px;
+  justify-self: center;
+}
+
+.apply-custom-btn:hover {
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 20px 0px var(--purple-shadow);
+}
+
+/* Actions Section */
+.actions-section {
+  border-top: 1px solid var(--purple-border);
+  padding-top: 20px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 10px;
+  color: var(--text-light);
+  font-family: "Bricolage Grotesque";
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn:hover {
+  background-color: var(--medium-purple-bg-hover);
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow-darker);
+}
+
+.action-btn.danger {
+  background-color: var(--danger-red);
+  border-color: var(--danger-red-border);
+}
+
+.action-btn.danger:hover {
+  background-color: var(--danger-red-hover);
+  box-shadow: 0px 0px 10px 0px var(--danger-red-shadow);
 }
 
 /* Notes Styles */
@@ -687,31 +1143,31 @@ h4 {
   padding: 10px;
   resize: vertical;
   font-family: "Bricolage Grotesque";
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
   border-radius: 10px;
   border-width: 1px;
   border-style: solid;
-  border-color: #5454857c;
-  color: white;
+  border-color: var(--purple-border);
+  color: var(--text-light);
   text-wrap: wrap;
   overflow-wrap: anywhere;
 }
 
 .note-field::placeholder {
   font-family: "Bricolage Grotesque";
-  color: #64647e;
+  color: var(--text-muted);
   opacity: 1; /* Firefox */
 }
 
 .note-field::-ms-input-placeholder {
   /* Edge 12 -18 */
   font-family: "Bricolage Grotesque";
-  color: #64647e;
+  color: var(--text-muted);
   opacity: 1;
 }
 
 .note-field.locked {
-  border: 2px solid #f2388f;
+  border: 2px solid var(--primary-pink);
 }
 
 .player-note-container {
@@ -719,11 +1175,11 @@ h4 {
   margin: 0 10px;
   border-radius: 4px;
   border-width: 1px;
-  border-color: #2a2a42;
+  border-color: var(--medium-purple-bg);
 }
 
 .player-note-header {
-  color: white;
+  color: var(--text-light);
   font-family: "Bricolage Grotesque";
 }
 
@@ -734,23 +1190,25 @@ h4 {
 .gm-button {
   height: 40px;
   width: auto;
-  background-color: #2a2a42;
-  border-radius: 42px;
-  border: 1px solid #5454857c;
+  background-color: var(--medium-purple-bg);
+  border: 1px solid var(--purple-border);
   display: inline-block;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--text-light);
   font-family: "Bricolage Grotesque";
   font-size: 14px;
   text-decoration: none;
   transition: all 0.2s;
+  border-radius: 30px;
   padding: 10px 20px;
-  margin: 0 5px;
+  margin: 10px 10px 10px 0;
+  width: 100px;
+  justify-self: center;
 }
 
 .gm-button:hover {
-  background-color: #2a2a42;
-  box-shadow: 0px 0px 20px 0px #545485;
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 20px 0px var(--purple-shadow);
 }
 
 /* Utility Classes */
@@ -763,6 +1221,10 @@ h4 {
   grid-template-rows: auto auto;
   grid-gap: 20px;
   text-align: center;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 2;
+  grid-row-end: 3;
 }
 
 #gamemaster-message.note-field {
@@ -774,18 +1236,18 @@ h4 {
 }
 
 .buzzer-free {
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
   font-family: "Bricolage grotesque";
-  color: white;
+  color: var(--text-light);
   padding: 10px;
   border-radius: 40px;
 }
 
 .buzzer {
-  background-color: #f2388f;
+  background-color: var(--primary-pink);
   font-family: "Monigue";
   font-size: 50px;
-  color: white;
+  color: var(--text-light);
   padding: 10px;
   border-radius: 100px;
   grid-column-start: 2;
@@ -795,37 +1257,37 @@ h4 {
 }
 
 .buzzer-pressed {
-  background-color: #16d866;
+  background-color: var(--primary-green);
   font-family: "Bricolage grotesque";
-  color: white;
+  color: var(--text-light);
   padding: 10px;
   border-radius: 40px;
 }
 
 .buzzer-winner {
-  background-color: #16d866;
-  box-shadow: 0px 0px 20px 0px #16d866;
+  background-color: var(--primary-green);
+  box-shadow: 0px 0px 20px 0px var(--primary-green);
   cursor: not-allowed;
 }
 
 .buzzer-active {
-  background-color: #f2388f;
+  background-color: var(--primary-pink);
   transition: all 0.2s;
   cursor: pointer;
 }
 
 .buzzer-active:hover {
-  box-shadow: 0px 0px 20px 0px #f2388f;
+  box-shadow: 0px 0px 20px 0px var(--primary-pink);
 }
 
 .buzzer-disabled {
-  background-color: #2a2a42;
+  background-color: var(--medium-purple-bg);
   cursor: not-allowed;
 }
 
 .buzzer-timestamp {
   font-family: "Bricolage grotesque";
-  color: white;
+  color: var(--text-light);
   font-size: 12px;
 }
 
@@ -861,7 +1323,7 @@ h4 {
 #timer-display-master {
   font-family: "Monigue";
   font-size: 48px;
-  color: white;
+  color: var(--text-light);
   margin: 20px 0;
   grid-column-start: 1;
   grid-column-end: 4;
@@ -870,7 +1332,7 @@ h4 {
 #timer-display-player {
   font-family: "Monigue";
   font-size: 64px;
-  color: white;
+  color: var(--text-light);
   margin: 20px 0;
   height: max-content;
 }
@@ -887,9 +1349,9 @@ h4 {
 }
 
 .timer-btn {
-  background-color: #2a2a42;
-  color: white;
-  border: 1px solid #5454857c;
+  background-color: var(--medium-purple-bg);
+  color: var(--text-light);
+  border: 1px solid var(--purple-border);
   border-radius: 10px;
   padding: 10px 20px;
   margin: 0 5px;
@@ -899,15 +1361,15 @@ h4 {
 }
 
 .timer-btn:hover {
-  background-color: #2a2a42;
-  box-shadow: 0px 0px 10px 0px #5454859a;
+  background-color: var(--medium-purple-bg);
+  box-shadow: 0px 0px 10px 0px var(--purple-shadow);
 }
 
 .timer-reset,
 #roll-button,
 .player-button {
-  background-color: #f2388f;
-  color: white;
+  background-color: var(--primary-pink);
+  color: var(--text-light);
   border: none;
   border-radius: 30px;
   padding: 10px 20px;
@@ -923,15 +1385,15 @@ h4 {
 .timer-reset:hover,
 #roll-button:hover,
 .player-button:hover {
-  box-shadow: 0px 0px 20px 0px #f2388f;
+  box-shadow: 0px 0px 20px 0px var(--primary-pink);
 }
 
 .timer-time {
-  color: white; /* Standardfarbe */
+  color: var(--text-light); /* Standardfarbe */
 }
 
 .timer-time.ending {
-  color: #f2388f; /* Rot für die letzten 5 Sekunden */
+  color: var(--primary-pink); /* Rot für die letzten 5 Sekunden */
 }
 
 footer {
@@ -1023,8 +1485,48 @@ footer a:hover {
     format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
-/* Small devices such as large phones (768px and lesser) */
+/* Mobile Styles (768px and lesser) */
 @media (max-width: 768px) {
+  .room-code-container {
+    gap: 8px;
+  }
+  
+  .room-code {
+    font-size: 16px;
+    padding: 6px 12px;
+    min-width: 100px;
+  }
+  
+  .room-code-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .player-settings-modal {
+    width: 95%;
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .points-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .custom-points {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .custom-input {
+    width: 100%;
+  }
+  
+  .settings-submenu {
+    min-width: 120px;
+    right: -20px;
+  }
+
   h1 {
     font-size: 60px;
   }
@@ -1087,7 +1589,6 @@ footer a:hover {
   }
 
   /* Container und Layout */
-
   .container {
     max-width: fit-content;
     margin: 0 auto;
@@ -1100,7 +1601,7 @@ footer a:hover {
     grid-gap: 50px;
     padding: 0;
   }
-
+  
   #game-section h2 {
     grid-column-start: 1;
     grid-column-end: 2;
@@ -1159,7 +1660,7 @@ footer a:hover {
 
   #gamemaster-message {
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 2;
     grid-row-start: 2;
   }
 
@@ -1182,7 +1683,7 @@ footer a:hover {
     margin: 0 10px;
     border-radius: 4px;
     border-width: 1px;
-    border-color: #2a2a42;
+    border-color: var(--medium-purple-bg);
   }
 
   /* Leaderboard Styles */
@@ -1200,7 +1701,6 @@ footer a:hover {
   }
 
   /* Utility Classes */
-
   #player-section.game-section {
     grid-template-columns: 1fr;
     grid-template-rows: auto 200px 200px auto auto;
@@ -1228,7 +1728,6 @@ footer a:hover {
     grid-column-end: 2;
     grid-row-start: 3;
     grid-row-end: 4;
-
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
@@ -1250,3 +1749,4 @@ footer a:hover {
     font-size: 20px;
   }
 }
+

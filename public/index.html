@@ -97,11 +97,21 @@
         <!-- Room Code Display -->
         <h2>
           Room:
-          <span
-            id="current-room"
-            class="room-code"
-            title="Click to copy"
-          ></span>
+          <div class="room-code-container">
+            <span id="current-room" class="room-code" title="Click to copy room code">
+              Click to copy
+            </span>
+            <button 
+              id="room-code-toggle" 
+              class="room-code-toggle" 
+              type="button"
+              title="Toggle room code visibility"
+              aria-label="Toggle room code visibility"
+            >
+              👁️
+              <span class="visually-hidden">Show room code</span>
+            </button>
+          </div>
         </h2>
 
         <!-- Leaderboard -->
@@ -141,8 +151,8 @@
               <div id="current-buzzer"></div>
             </div>
             <div class="gm-controls">
-              <button class="gm-button" id="release-buzzers">Unlock</button>
               <button class="gm-button" id="lock-buzzers">Lock</button>
+              <button class="gm-button" id="release-buzzers">Unlock</button>
             </div>
           </div>
 
@@ -165,10 +175,10 @@
             ></textarea>
             <div class="gm-controls">
               <button class="gm-button" id="lock-all-answers">
-                Lock Answers
+                Lock
               </button>
               <button class="gm-button" id="unlock-all-answers">
-                Unlock Answers
+                Unlock
               </button>
             </div>
           </div>

@@ -30,18 +30,46 @@ deviceId = getOrCreateDeviceId();
 function showGameInterface(roomCode, asGamemaster) {
   currentRoomCode = roomCode;
   const roomCodeElement = document.getElementById("current-room");
-  roomCodeElement.textContent = roomCode;
+  const toggleButton = document.getElementById("room-code-toggle");
+  
+  // Store the actual room code but display it as hidden initially
+  roomCodeElement.dataset.actualCode = roomCode;
+  roomCodeElement.textContent = "Click to copy";
+  
+  // Set initial state for toggle button
+  toggleButton.innerHTML = "👁️";
+  toggleButton.dataset.visible = "false";
 
-  // Room code click-to-copy functionality
+  // Room code click-to-copy functionality (still copies the real code)
   roomCodeElement.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(roomCode);
+      const originalText = roomCodeElement.textContent;
       roomCodeElement.textContent = "Copied!";
       setTimeout(() => {
-        roomCodeElement.textContent = roomCode;
+        // Restore either the hidden or visible state
+        const isVisible = toggleButton.dataset.visible === "true";
+        roomCodeElement.textContent = isVisible ? roomCode : "Click to copy";
       }, 1000);
     } catch (err) {
       console.error("Failed to copy:", err);
+    }
+  });
+
+  // Toggle visibility functionality
+  toggleButton.addEventListener("click", () => {
+    const isCurrentlyVisible = toggleButton.dataset.visible === "true";
+    
+    if (isCurrentlyVisible) {
+      // Hide the code
+      roomCodeElement.textContent = "Click to copy";
+      toggleButton.innerHTML = "👁️";
+      toggleButton.dataset.visible = "false";
+    } else {
+      // Show the code
+      roomCodeElement.textContent = roomCode;
+      toggleButton.innerHTML = "🙈";
+      toggleButton.dataset.visible = "true";
     }
   });
 
@@ -72,6 +100,244 @@ function showGameInterface(roomCode, asGamemaster) {
     generatorControls.style.display = isGamemaster ? "grid" : "none";
   }
 }
+// ========================================
+// Player Settings Modal Functions (ERSETZT DIE ALTEN)
+// ========================================
+let currentSelectedPlayer = null;
+let activeSubmenu = null;
+
+// Submenu Management
+function togglePlayerSubmenu(player, buttonElement) {
+  // Close any existing submenu
+  closeAllSubmenus();
+  
+  // If clicking the same button, just close
+  if (activeSubmenu === buttonElement) {
+    activeSubmenu = null;
+    return;
+  }
+  
+  // Create and show submenu
+  const submenu = createPlayerSubmenu(player);
+  buttonElement.appendChild(submenu);
+  submenu.classList.add('active');
+  activeSubmenu = buttonElement;
+  
+  // Close submenu when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', closeSubmenuOnOutsideClick);
+  }, 0);
+}
+
+function createPlayerSubmenu(player) {
+  const submenu = document.createElement('div');
+  submenu.className = 'settings-submenu';
+  submenu.innerHTML = `
+    <div class="submenu-item" data-action="points">
+      <span class="submenu-item-icon">🎯</span>
+      <span>Points</span>
+    </div>
+    <div class="submenu-item" data-action="settings">
+      <span class="submenu-item-icon">⚙️</span>
+      <span>Settings</span>
+    </div>
+  `;
+  
+  // Add event listeners to submenu items
+  submenu.querySelectorAll('.submenu-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const action = e.currentTarget.dataset.action;
+      handleSubmenuAction(action, player);
+      closeAllSubmenus();
+    });
+  });
+  
+  return submenu;
+}
+
+function handleSubmenuAction(action, player) {
+  switch(action) {
+    case 'points':
+      openPlayerPointsModal(player);
+      break;
+    case 'settings':
+      // Hier könntest du später weitere Einstellungen hinzufügen
+      alert('More settings to come');
+      break;
+  }
+}
+
+function closeSubmenuOnOutsideClick(e) {
+  if (activeSubmenu && !activeSubmenu.contains(e.target)) {
+    closeAllSubmenus();
+  }
+}
+
+function closeAllSubmenus() {
+  const openSubmenus = document.querySelectorAll('.settings-submenu');
+  openSubmenus.forEach(submenu => {
+    submenu.remove();
+  });
+  activeSubmenu = null;
+  document.removeEventListener('click', closeSubmenuOnOutsideClick);
+}
+
+// Points Modal Functions
+function openPlayerPointsModal(player) {
+  currentSelectedPlayer = player;
+  const overlay = document.getElementById('modal-overlay');
+  
+  // Update modal content
+  document.getElementById('modal-player-name').textContent = player.name;
+  document.getElementById('modal-player-points').textContent = `${player.points} Points`;
+  document.getElementById('modal-player-avatar').src = `/assets/img/avatar_${player.avatarId}.png`;
+  
+  // Show modal
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlayerPointsModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  currentSelectedPlayer = null;
+}
+
+function applyPointChange(points) {
+  if (currentSelectedPlayer && isGamemaster) {
+    updatePoints(currentSelectedPlayer.id, points);
+    
+    const newPoints = currentSelectedPlayer.points + points;
+    currentSelectedPlayer.points = newPoints;
+    document.getElementById('modal-player-points').textContent = `${newPoints} Points`;
+    
+  }
+}
+function applyCustomPoints() {
+  const input = document.getElementById('custom-points-input');
+  const points = parseInt(input.value);
+  
+  if (isNaN(points)) {
+    alert('Please enter a valid number');
+    return;
+  }
+  
+  applyPointChange(points);
+  input.value = '';
+}
+
+function resetPlayerPoints() {
+  if (currentSelectedPlayer && isGamemaster) {
+    const currentPoints = currentSelectedPlayer.points;
+    updatePoints(currentSelectedPlayer.id, -currentPoints);
+    closePlayerPointsModal();
+  }
+}
+
+function createPlayerPointsModal() {
+  const modalHTML = `
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="player-settings-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Manage points</h3>
+          <button class="close-button" type="button">&times;</button>
+        </div>
+        
+        <div class="player-info">
+          <img id="modal-player-avatar" class="modal-player-avatar" src="" alt="Player Avatar">
+          <div class="player-info-text">
+            <h4 id="modal-player-name">Player Name</h4>
+            <p id="modal-player-points">0 Points</p>
+          </div>
+        </div>
+        
+        <div class="points-section">
+          <div class="section-title">Add and remove</div>
+          
+          <div class="points-grid">
+            <button class="point-btn negative" type="button" data-points="-1">-1</button>
+            <button class="point-btn positive" type="button" data-points="1">+1</button>
+            <button class="point-btn negative" type="button" data-points="-10">-10</button>
+            <button class="point-btn positive" type="button" data-points="10">+10</button>
+            <button class="point-btn negative" type="button" data-points="-50">-50</button>
+            <button class="point-btn positive" type="button" data-points="50">+50</button>
+            <button class="point-btn negative" type="button" data-points="-100">-100</button>
+            <button class="point-btn positive" type="button" data-points="100">+100</button>
+          </div>
+          
+          <div class="custom-points">
+            <input type="number" id="custom-points-input" class="custom-input" placeholder="Custom">
+            <button class="apply-custom-btn" type="button">Apply</button>
+          </div>
+        </div>
+        
+        <div class="actions-section">
+          <button class="action-btn danger" type="button" id="reset-points-btn">
+            🔄 Reset points to 0
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add modal to body if it doesn't exist
+  if (!document.getElementById('modal-overlay')) {
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners after creating modal
+    setupModalEventListeners();
+  }
+}
+
+function setupModalEventListeners() {
+  const overlay = document.getElementById('modal-overlay');
+  const closeBtn = overlay.querySelector('.close-button');
+  const pointBtns = overlay.querySelectorAll('.point-btn');
+  const customBtn = overlay.querySelector('.apply-custom-btn');
+  const resetBtn = overlay.querySelector('#reset-points-btn');
+  const customInput = overlay.querySelector('#custom-points-input');
+  
+  // Close button
+  closeBtn.addEventListener('click', closePlayerPointsModal);
+  
+  // Point buttons
+  pointBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const points = parseInt(btn.dataset.points);
+      applyPointChange(points);
+    });
+  });
+  
+  // Custom points button
+  customBtn.addEventListener('click', applyCustomPoints);
+  
+  // Reset button
+  resetBtn.addEventListener('click', resetPlayerPoints);
+  
+  // Custom input enter key
+  customInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      applyCustomPoints();
+    }
+  });
+  
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      closePlayerPointsModal();
+    }
+  });
+  
+  // Close on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+      closePlayerPointsModal();
+    }
+  });
+}
+
 
 // ========================================
 // Note Update Functions
@@ -108,6 +374,8 @@ function updatePoints(playerId, points) {
     });
   }
 }
+
+
 
 // ========================================
 // Sound Functions
@@ -179,10 +447,14 @@ function updateTimerDisplay(seconds) {
   }
 }
 
+
+
 // ========================================
 // Event Listeners Setup
 // ========================================
 document.addEventListener("DOMContentLoaded", () => {
+  createPlayerPointsModal();
+
   // Sound Toggle Setup
   const soundToggle = document.getElementById("toggle-sound");
   if (soundToggle) {
@@ -231,6 +503,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     isGamemaster = false;
   });
+
+  // Modal close events
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'modal-overlay') {
+      closePlayerSettings();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closePlayerSettings();
+    }
+  });
+
+  // Custom points enter key
+  document.getElementById('custom-points-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      applyCustomPoints();
+    }
+  });
+
+  
 
   // Buzzer Setup
   document.getElementById("buzzer").addEventListener("click", () => {
@@ -443,40 +737,18 @@ socket.on("player-list-update", (players) => {
       <div class="player-points">${player.points} Points</div>
       ${
         isGamemaster
-          ? `
-          <div class="point-controls">
-              <button class="plus-button" data-player="${player.id}">+100</button>
-              <button class="plus-button" data-player="${player.id}">+50</button>
-              <button class="plus-button" data-player="${player.id}">+10</button>
-              <button class="plus-button" data-player="${player.id}">+1</button>
-              <button class="minus-button" data-player="${player.id}">-1</button>
-              <button class="minus-button" data-player="${player.id}">-10</button>
-              <button class="minus-button" data-player="${player.id}">-50</button>
-              <button class="minus-button" data-player="${player.id}">-100</button>
-          </div>
-          `
+          ? `<button class="settings-button" type="button">⚙️</button>`
           : ""
       }
     `;
 
+    // Add event listener for settings button
     if (isGamemaster) {
-      const plusBtns = playerDiv.querySelectorAll(".plus-button");
-      const minusBtns = playerDiv.querySelectorAll(".minus-button");
-
-      plusBtns[0].addEventListener("click", () => updatePoints(player.id, 100));
-      plusBtns[1].addEventListener("click", () => updatePoints(player.id, 50));
-      plusBtns[2].addEventListener("click", () => updatePoints(player.id, 10));
-      plusBtns[3].addEventListener("click", () => updatePoints(player.id, 1));
-      minusBtns[0].addEventListener("click", () => updatePoints(player.id, -1));
-      minusBtns[1].addEventListener("click", () =>
-        updatePoints(player.id, -10)
-      );
-      minusBtns[2].addEventListener("click", () =>
-        updatePoints(player.id, -50)
-      );
-      minusBtns[3].addEventListener("click", () =>
-        updatePoints(player.id, -100)
-      );
+      const settingsBtn = playerDiv.querySelector('.settings-button');
+      settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePlayerSubmenu(player, settingsBtn);
+      });
     }
 
     leaderboard.appendChild(playerDiv);
