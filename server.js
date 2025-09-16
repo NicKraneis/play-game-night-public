@@ -28,8 +28,8 @@ const limiter = rateLimit({
 });
 
 const rateLimiter = new RateLimiterMemory({
-  points: 30,    // Anzahl erlaubter Events
-  duration: 10,  // pro 10 Sekunden
+  points: 30,    // Number of allowed events
+  duration: 10,  // per 10 seconds
 });
 
 // Express Setup
@@ -111,6 +111,9 @@ function cleanupRooms() {
   for (const roomCode in rooms) {
     const room = rooms[roomCode];
 
+    // If room is already scheduled for deletion, skip it
+    if(room.pendingDeletion) continue;
+
     // Check if host is still connected
     if (!io.sockets.adapter.rooms.get(roomCode)?.has(room.host)) {
       deleteRoom(roomCode);
@@ -166,7 +169,7 @@ function startRoomTimer(roomCode) {
 // Socket.IO Event Handlers
 // ========================================
 io.on("connection", (socket) => {
-  // Rate Limiting für alle Events
+  // Rate Limiting for all events
   socket.use(async (_, next) => {
     try {
       await rateLimiter.consume(socket.id);
@@ -181,38 +184,115 @@ io.on("connection", (socket) => {
   // ----------------------------------------
   socket.on("create-room", (data) => {
     try {
-      if (!data?.playerName?.trim()) {
-        throw new Error("Invalid player name");
-      }
+        const { playerName, avatarId, deviceId, forceCreate } = data;
 
-      const roomCode = generateRoomCode();
-      console.log("Creating room with code:", roomCode);
+        if (!playerName?.trim()) {
+            throw new Error("Invalid player name");
+        }
+        if (!deviceId) {
+            throw new Error("Device ID is required to create a room.");
+        }
 
-      rooms[roomCode] = {
-        host: socket.id,
-        players: {},
-        buzzerActive: true,
-        notes: {},
-        gamemasterNote: "",
-        createdAt: Date.now(),
-        timer: {
-          active: false,
-          endTime: null,
-          duration: 0,
-        },
-        lockedAnswers: new Set(),
-      };
-      console.log("Room created. Current rooms:", Object.keys(rooms));
+        // If user wants to create a new room, delete any old, pending-deletion room first.
+        if (forceCreate) {
+            for (const rCode in rooms) {
+                if (rooms[rCode].hostDeviceId === deviceId) {
+                    console.log(`Force create: Deleting old room ${rCode} for deviceId ${deviceId}`);
+                    if (rooms[rCode].deletionTimeout) {
+                        clearTimeout(rooms[rCode].deletionTimeout);
+                    }
+                    deleteRoom(rCode);
+                    break; // Found and deleted, no need to search further.
+                }
+            }
+        }
 
-      currentRoom = roomCode;
-      socket.join(roomCode);
+        // --- Rejoin Logic (only if not forcing create) ---
+        if (!forceCreate) {
+            for (const rCode in rooms) {
+                const room = rooms[rCode];
+                if (room.hostDeviceId === deviceId && room.pendingDeletion) {
+                    console.log(`Gamemaster with deviceId ${deviceId} is rejoining room ${rCode}`);
+                    
+                    // Cancel deletion timer
+                    clearTimeout(room.deletionTimeout);
+                    room.deletionTimeout = null;
+                    room.pendingDeletion = false;
 
-      socket.emit("room-created", { roomCode });
-      startRoomTimer(roomCode);
-      console.log(`Room ${roomCode} created by ${data.playerName}`);
+                    // Find old host player object and remove it
+                    let oldHostId = null;
+                    for (const pId in room.players) {
+                        if (room.players[pId].isHost) {
+                            oldHostId = pId;
+                            break;
+                        }
+                    }
+                    if (oldHostId) {
+                        delete room.players[oldHostId];
+                    }
+
+                    // Update host socket ID and add new player object
+                    room.host = socket.id;
+                    room.players[socket.id] = {
+                        id: socket.id,
+                        name: playerName.trim(),
+                        points: 0,
+                        isHost: true,
+                        avatarId: avatarId,
+                        deviceId: deviceId,
+                    };
+                    
+                    socket.join(rCode);
+                    
+                    socket.emit("room-created", { roomCode: rCode });
+                    io.to(rCode).emit('gamemaster-rejoined');
+                    io.to(rCode).emit("player-list-update", room.players);
+                    
+                    // Send current state to the rejoining host
+                    socket.emit("notes-update", room.notes); 
+                    socket.emit("gamemaster-note-update", { text: room.gamemasterNote });
+
+                    console.log(`Gamemaster ${playerName} successfully rejoined room ${rCode}`);
+                    return; // Exit after rejoining
+                }
+            }
+        }
+
+        // --- Original Create Room Logic ---
+        const roomCode = generateRoomCode();
+        console.log(`Creating new room with code: ${roomCode} for deviceId: ${deviceId}`);
+
+        rooms[roomCode] = {
+            host: socket.id,
+            hostDeviceId: deviceId, // Store host device ID
+            players: {},
+            buzzerActive: true,
+            notes: {},
+            gamemasterNote: "",
+            createdAt: Date.now(),
+            timer: { active: false, endTime: null, duration: 0 },
+            lockedAnswers: new Set(),
+            pendingDeletion: false, // Initial state
+            deletionTimeout: null,  // Initial state
+        };
+
+        // Add host to the players list
+        rooms[roomCode].players[socket.id] = {
+            id: socket.id,
+            name: playerName.trim(),
+            points: 0,
+            isHost: true,
+            avatarId: avatarId,
+            deviceId: deviceId,
+        };
+
+        socket.join(roomCode);
+        socket.emit("room-created", { roomCode });
+        startRoomTimer(roomCode); // This is the 2h inactivity timer
+        console.log(`Room ${roomCode} created by ${playerName}`);
     } catch (error) {
-      socket.emit("room-error", error.message);
-      console.error("Room creation error:", error);
+        socket.emit("room-error", error.message);
+        console.error("Room creation error:", error);
     }
   });
 
@@ -227,11 +307,11 @@ io.on("connection", (socket) => {
       }
 
       const room = rooms[roomCode];
-      if (!room) {
-        throw new Error("Room does not exist");
+      if (!room || room.pendingDeletion) {
+        throw new Error("Room does not exist or is closing.");
       }
 
-      const playerCount = Object.keys(room.players).length;
+      const playerCount = Object.values(room.players).filter(p => !p.isHost).length;
       if (playerCount >= 12) {
         throw new Error("Room is full (max 12 players)");
       }
@@ -248,8 +328,6 @@ io.on("connection", (socket) => {
         avatarId: data.avatarId,
         deviceId: data.deviceId,
       };
-
-      currentRoom = roomCode;
 
       socket.emit("join-success", { roomCode: roomCode });
 
@@ -332,6 +410,26 @@ io.on("connection", (socket) => {
       io.to(room.host).emit("notes-update", room.notes);
     } catch (error) {
       console.error("Unlock all answers error:", error);
+    }
+  });
+
+  socket.on("clear-all-notes", (data) => {
+    try {
+      if (!validateGamemaster(socket, data.roomCode)) {
+        socket.emit("room-error", "Unauthorized: Only the gamemaster can clear all notes.");
+        return;
+      }
+      const room = rooms[data.roomCode];
+      if (room && room.notes) {
+        Object.keys(room.notes).forEach((playerId) => {
+          if (room.notes[playerId]) {
+            room.notes[playerId].text = "";
+          }
+        });
+        io.to(room.host).emit("notes-update", room.notes);
+      }
+    } catch (error) {
+      console.error("Clear all notes error:", error);
     }
   });
 
@@ -433,16 +531,17 @@ io.on("connection", (socket) => {
       }
       const { roomCode, playerId, points } = data;
       const room = rooms[roomCode];
-      room.players[playerId].points += points;
-
-      const deviceId = room.players[playerId].deviceId;
-      if (deviceId) {
-        if (!playerPoints[roomCode]) {
-          playerPoints[roomCode] = {};
-        }
-        playerPoints[roomCode][deviceId] = room.players[playerId].points;
+      if (room.players[playerId]) {
+          room.players[playerId].points += points;
+          const deviceId = room.players[playerId].deviceId;
+          if (deviceId) {
+              if (!playerPoints[roomCode]) {
+                  playerPoints[roomCode] = {};
+              }
+              playerPoints[roomCode][deviceId] = room.players[playerId].points;
+          }
+          io.to(roomCode).emit("player-list-update", room.players);
       }
-      io.to(roomCode).emit("player-list-update", room.players);
     } catch (error) {
       console.error("Update points error:", error);
     }
@@ -490,8 +589,9 @@ io.on("connection", (socket) => {
       const room = rooms[data.roomCode];
       const min = Math.ceil(data.min);
       const max = Math.floor(data.max);
+      
       const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-      io.to(data.roomCode).emit("number-generated", { number: randomNumber });
+      io.to(data.roomCode).emit("number-generated", { number: randomNumber, min: data.min, max: data.max });
     } catch (error) {
       console.error("Random number generation error:", error);
     }
@@ -501,31 +601,52 @@ io.on("connection", (socket) => {
   // Disconnection Handler
   // ----------------------------------------
   socket.on("disconnect", () => {
-    try {
-      if (currentRoom && rooms[currentRoom]) {
-        const room = rooms[currentRoom];
+    let roomCode = null;
+    let playerIsHost = false;
+    const socketId = socket.id;
 
-        // When a player disconnects
-        if (room.players[socket.id]) {
-          delete room.notes[socket.id];
-          delete room.players[socket.id];
-          io.to(currentRoom).emit("player-list-update", room.players);
-          io.to(room.host).emit("notes-update", room.notes);
+    // Find the room this socket was in
+    for (const code in rooms) {
+        if (rooms[code].players[socketId]) {
+            roomCode = code;
+            if (rooms[code].host === socketId) {
+                playerIsHost = true;
+            }
+            break;
         }
+    }
+
+    if (!roomCode) {
+        console.log(`Disconnected client ${socketId} was not in any room.`);
+        return;
+    }
+    
+    try {
+        const room = rooms[roomCode];
+        console.log(`Client ${socketId} disconnected from room ${roomCode}. Is host: ${playerIsHost}`);
 
         // When the host disconnects
-        if (room.host === socket.id) {
-          deleteRoom(currentRoom);
-        }
+        if (playerIsHost) {
+            // Only set timer if one isn't already running
+            if (!room.deletionTimeout) {
+                console.log(`Host of room ${roomCode} disconnected. Starting 5-minute deletion timer.`);
+                room.pendingDeletion = true;
+                io.to(roomCode).emit('gamemaster-disconnected');
 
-        // Check if room is empty
-        const connectedClients =
-          io.sockets.adapter.rooms.get(currentRoom)?.size || 0;
-        if (connectedClients === 0) {
-          deleteRoom(currentRoom);
+                room.deletionTimeout = setTimeout(() => {
+                    console.log(`5-minute timer expired for room ${roomCode}. Deleting room.`);
+                    deleteRoom(roomCode);
+                }, 300000); // 5 minutes
+            }
+        } else { // When a player disconnects
+            console.log(`Player ${room.players[socketId]?.name} left room ${roomCode}`);
+            delete room.notes[socketId];
+            delete room.players[socketId];
+            io.to(roomCode).emit("player-list-update", room.players);
+            if (room.host) { // Check if host still exists
+                io.to(room.host).emit("notes-update", room.notes);
+            }
         }
-      }
-      console.log("Client disconnected");
     } catch (error) {
       console.error("Disconnect error:", error);
     }

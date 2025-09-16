@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- Meta Tags und Resourcen -->
+    <!-- Meta Tags and Resources -->
     <title>Game Night</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="/socket.io/socket.io.js"></script>
@@ -9,6 +9,11 @@
     <script src="/js/main.js" defer></script>
   </head>
   <body>
+    <!-- Gamemaster Disconnect Banner -->
+    <div id="gm-disconnect-banner" class="gm-disconnect-banner hidden">
+      Gamemaster has disconnected. The room will close in 5 minutes unless they rejoin.
+    </div>
+    
     <!-- Donation Button -->
     <div class="donate">
       <a target="_blank" href="https://ko-fi.com/nickraneis">
@@ -17,7 +22,7 @@
     </div>
 
     <div class="container">
-      <!-- Start Section: Login und Raumerstellung -->
+      <!-- Start Section: Login and Room Creation -->
       <div id="start-section">
         <h1>
           Welcome to the <br />
@@ -74,11 +79,14 @@
             src="./assets/img/gamemaster_avatar.png"
             alt="Gamemaster-Avatar"
           />
-          <button class="log-button" id="create-room">Create room</button>
+          <div class="create-room-actions">
+            <button class="log-button" id="create-room">Create room</button>
+            <!-- Rejoin button will be added here via JS if needed -->
+          </div>
         </div>
       </div>
 
-      <!-- Game Section: Hauptspielbereich -->
+      <!-- Game Section: Main Game Area -->
       <div id="game-section" class="game-section">
         <!-- Sound Control -->
         <div class="sound-control">
@@ -95,8 +103,8 @@
         </div>
 
         <!-- Room Code Display -->
-        <h2>
-          Room:
+        <h2 class="room-title">
+          Roomcode:
           <div class="room-code-container">
             <span id="current-room" class="room-code" title="Click to copy room code">
               Click to copy
@@ -121,110 +129,145 @@
 
         <!-- Gamemaster Interface -->
         <div id="gamemaster-section" class="game-section inner-container">
-          <!-- Random Number Generator -->
-          <div id="random-generator-controls" class="generator-controls">
-            <h3>Random Roll</h3>
-            <div class="random-number-section">
-              <div id="random-number-display-gm" class="random-number"></div>
-            </div>
-            <input
-              type="number"
-              id="min-number"
-              class="generator-input gi1"
-              placeholder="Min"
-              min="0"
-            />
-            <input
-              type="number"
-              id="max-number"
-              class="generator-input gi2"
-              placeholder="Max"
-              min="0"
-            />
-            <button id="roll-button" class="gm-button">Roll</button>
-          </div>
+          <div class="gm-columns">
+            <!-- Left Column: Tools -->
+            <div class="gm-column" id="gm-tools">
+              <h3>Tools</h3>
+               <!-- Buzzer Controls -->
+              <div class="controls-panel" id="gm-buzzer-controls">
+                <h4>Buzzer</h4>
+                <div id="buzzer-status" class="buzzer-status">
+                  <div id="current-buzzer"></div>
+                </div>
+                <div class="gm-controls">
+                  <button class="gm-button" id="lock-buzzers">Lock</button>
+                  <button class="gm-button" id="release-buzzers">Unlock</button>
+                </div>
+              </div>
+              <!-- Random Number Generator -->
+              <div id="random-generator-controls" class="generator-controls">
+                <h4>Random Roll</h4>
+                <div class="random-number-section">
+                  <div id="random-number-display-gm" class="random-number"></div>
+                </div>
+                <div class="generator-inputs">
+                  <input
+                    type="number"
+                    id="min-number"
+                    class="generator-input"
+                    placeholder="Min"
+                    min="0"
+                  />
+                  <input
+                    type="number"
+                    id="max-number"
+                    class="generator-input"
+                    placeholder="Max"
+                    min="0"
+                  />
+                </div>
+                <button id="roll-button" class="gm-button">Roll</button>
+              </div>
 
-          <!-- Buzzer Controls -->
-          <div class="controls-panel">
-            <h3>Buzzer</h3>
-            <div id="buzzer-status" class="buzzer-status">
-              <div id="current-buzzer"></div>
+              <!-- Timer Controls -->
+              <div id="timer-section" class="timer-section">
+                <h4>Timer</h4>
+                <div id="timer-display-master"></div>
+                <div id="timer-controls"></div>
+              </div>
             </div>
-            <div class="gm-controls">
-              <button class="gm-button" id="lock-buzzers">Lock</button>
-              <button class="gm-button" id="release-buzzers">Unlock</button>
+
+            <!-- Right Column: Players -->
+            <div class="gm-column" id="gm-players">
+              <h3>Players</h3>
+              <!-- Gamemaster Message Section -->
+              <div class="gamemaster-note-section">
+                <h4>Your message to the players</h4>
+                <textarea
+                  id="gamemaster-note"
+                  class="note-field"
+                  maxlength="500"
+                  placeholder="Write a message to your players..."
+                  oninput="updateGamemasterNote(this.value)"
+                ></textarea>
+                
+              </div>
+
+              <!-- Player Notes Display -->
+              <div id="showmaster-notes" class="spieler-textfelder">
+                <h4>Player texts</h4>
+                <div class="gm-controls">
+                  <button class="gm-button" id="lock-all-answers">
+                    Lock
+                  </button>
+                  <button class="gm-button" id="unlock-all-answers">
+                    Unlock
+                  </button>
+                  <button class="gm-button" id="clear-all-notes">
+                    Clear
+                  </button>
+                </div>
+                <div id="all-player-notes"></div>
+              </div>
             </div>
-          </div>
-
-          <!-- Timer Controls -->
-          <div id="timer-section" class="timer-section">
-            <h3>Timer</h3>
-            <div id="timer-display-master"></div>
-            <div id="timer-controls"></div>
-          </div>
-
-          <!-- Gamemaster Message Section -->
-          <div class="gamemaster-note-section">
-            <h3>Your message to the players</h3>
-            <textarea
-              id="gamemaster-note"
-              class="note-field"
-              maxlength="500"
-              placeholder="Write a message to your players..."
-              oninput="updateGamemasterNote(this.value)"
-            ></textarea>
-            <div class="gm-controls">
-              <button class="gm-button" id="lock-all-answers">
-                Lock
-              </button>
-              <button class="gm-button" id="unlock-all-answers">
-                Unlock
-              </button>
-            </div>
-          </div>
-
-          <!-- Player Notes Display -->
-          <div id="showmaster-notes" class="spieler-textfelder">
-            <h3>Player texts</h3>
-            <div id="all-player-notes"></div>
           </div>
         </div>
 
+
         <!-- Player Interface -->
         <div id="player-section" class="game-section inner-container">
-          <!-- Random Number Display -->
-          <div class="random-number-section-player">
-            <h3>Random Roll</h3>
-            <div id="random-number-display" class="random-number"></div>
-          </div>
+          <div class="player-columns">
+            <!-- Left Column: Player Actions -->
+            <div class="player-column" id="player-actions">
+              <h3>You</h3>
+              
+              <div class="player-item-group">
+                <h4>Buzzer</h4>
+                <button id="buzzer" class="buzzer">BUZZ</button>
+              </div>
 
-          <!-- Buzzer Button -->
-          <button id="buzzer" class="buzzer">BUZZ</button>
+              <div id="player-note-section" class="player-item-group full-flex">
+                <h4>Your text</h4>
+                <textarea
+                  id="player-note"
+                  class="note-field"
+                  maxlength="500"
+                  placeholder="Your notes..."
+                ></textarea>
+                <div class="player-controls">
+                    <button class="player-button" id="lock-answer">
+                      Lock in
+                    </button>
+                    <button class="gm-button" id="clear-note">
+                      Clear
+                    </button>
+                </div>
+              </div>
+            </div>
 
-          <!-- Timer Display -->
-          <div id="timer-area" class="timer-area">
-            <h3>Timer</h3>
-            <div id="timer-display-player"></div>
-          </div>
+            <!-- Separator is done with CSS border -->
 
-          <!-- Gamemaster Message Display -->
-          <div class="gamemaster-message">
-            <h3>Showmaster</h3>
-            <textarea id="gamemaster-message" class="note-field" readonly></textarea>
-          </div>
+            <!-- Right Column: Gamemaster Info -->
+            <div class="player-column" id="gamemaster-info">
+                <h3>Gamemaster</h3>
 
-          <!-- Player Note Input -->
-          <div id="player-note-section">
-            <h3>Your text</h3>
-            <textarea
-              id="player-note"
-              class="note-field"
-              maxlength="500"
-              placeholder="Your notes..."
-            ></textarea>
-            <button class="player-button" id="lock-answer">
-              Lock in Answer
-            </button>
+                <div class="player-item-group full-flex">
+                    <h4>Gamemaster message</h4>
+                    <textarea id="gamemaster-message" class="note-field" readonly></textarea>
+                </div>
+                
+                <div class="gm-info-grid">
+                    <div class="random-number-section-player player-item-group">
+                        <h4>Random Roll</h4>
+                        <div id="random-number-display" class="random-number"></div>
+                    </div>
+
+                    <div id="timer-area" class="player-item-group">
+                        <h4>Timer</h4>
+                        <div id="timer-display-player"></div>
+                    </div>
+                </div>
+            </div>
           </div>
         </div>
 

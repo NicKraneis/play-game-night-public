@@ -85,10 +85,10 @@ function showGameInterface(roomCode, asGamemaster) {
     : "none";
   document.getElementById("player-section").style.display = isGamemaster
     ? "none"
-    : "grid";
+    : "block";
   document.getElementById("player-note-section").style.display = isGamemaster
     ? "none"
-    : "block";
+    : "flex";
   document.getElementById("showmaster-notes").style.display = isGamemaster
     ? "block"
     : "none";
@@ -100,8 +100,34 @@ function showGameInterface(roomCode, asGamemaster) {
     generatorControls.style.display = isGamemaster ? "grid" : "none";
   }
 }
+
+function showRejoinButton(rejoinInfo) {
+    const createRoomActions = document.querySelector('.create-room-actions');
+    if (!createRoomActions) return;
+
+    const rejoinButton = document.createElement('button');
+    rejoinButton.id = 'rejoin-room';
+    rejoinButton.className = 'log-button'; // Reuse existing styles
+    rejoinButton.textContent = 'Rejoin last';
+
+    rejoinButton.addEventListener('click', () => {
+        // Pre-fill name and trigger the rejoin logic on the server
+        document.getElementById('player-name').value = rejoinInfo.playerName || 'Showmaster';
+        playerName = rejoinInfo.playerName || 'Showmaster';
+        socket.emit("create-room", {
+            playerName: playerName,
+            avatarId: currentAvatarId, // This will be the currently selected avatar
+            deviceId: deviceId,
+            forceCreate: false // Explicitly state we are not forcing a new room
+        });
+        isGamemaster = true;
+    });
+
+    // Add the button below the create button
+    createRoomActions.appendChild(rejoinButton);
+}
 // ========================================
-// Player Settings Modal Functions (ERSETZT DIE ALTEN)
+// Player Settings Modal Functions
 // ========================================
 let currentSelectedPlayer = null;
 let activeSubmenu = null;
@@ -162,7 +188,7 @@ function handleSubmenuAction(action, player) {
       openPlayerPointsModal(player);
       break;
     case 'settings':
-      // Hier könntest du später weitere Einstellungen hinzufügen
+      // More settings can be added later
       alert('More settings to come');
       break;
   }
@@ -209,28 +235,36 @@ function applyPointChange(points) {
   if (currentSelectedPlayer && isGamemaster) {
     updatePoints(currentSelectedPlayer.id, points);
     
+    // Optimistically update the UI
     const newPoints = currentSelectedPlayer.points + points;
     currentSelectedPlayer.points = newPoints;
     document.getElementById('modal-player-points').textContent = `${newPoints} Points`;
     
   }
 }
-function applyCustomPoints() {
-  const input = document.getElementById('custom-points-input');
-  const points = parseInt(input.value);
-  
-  if (isNaN(points)) {
-    alert('Please enter a valid number');
-    return;
-  }
-  
-  applyPointChange(points);
-  input.value = '';
+
+function applyCustomPointChange(action) {
+    const input = document.getElementById('custom-points-input');
+    const points = parseInt(input.value);
+
+    if (isNaN(points) || points === 0) {
+        input.style.borderColor = 'red';
+        setTimeout(() => { 
+            input.style.borderColor = '';
+        }, 1000);
+        return;
+    }
+
+    const pointsToApply = action === 'subtract' ? -points : points;
+    applyPointChange(pointsToApply);
+    input.value = '';
+    input.focus();
 }
 
 function resetPlayerPoints() {
   if (currentSelectedPlayer && isGamemaster) {
     const currentPoints = currentSelectedPlayer.points;
+    // To reset, we subtract the current points
     updatePoints(currentSelectedPlayer.id, -currentPoints);
     closePlayerPointsModal();
   }
@@ -268,8 +302,9 @@ function createPlayerPointsModal() {
           </div>
           
           <div class="custom-points">
+            <button class="custom-point-btn subtract" type="button" data-action="subtract">-</button>
             <input type="number" id="custom-points-input" class="custom-input" placeholder="Custom">
-            <button class="apply-custom-btn" type="button">Apply</button>
+            <button class="custom-point-btn add" type="button" data-action="add">+</button>
           </div>
         </div>
         
@@ -295,7 +330,7 @@ function setupModalEventListeners() {
   const overlay = document.getElementById('modal-overlay');
   const closeBtn = overlay.querySelector('.close-button');
   const pointBtns = overlay.querySelectorAll('.point-btn');
-  const customBtn = overlay.querySelector('.apply-custom-btn');
+  const customPointBtns = overlay.querySelectorAll('.custom-point-btn');
   const resetBtn = overlay.querySelector('#reset-points-btn');
   const customInput = overlay.querySelector('#custom-points-input');
   
@@ -310,16 +345,21 @@ function setupModalEventListeners() {
     });
   });
   
-  // Custom points button
-  customBtn.addEventListener('click', applyCustomPoints);
-  
+  // Custom points +/- buttons
+  customPointBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          applyCustomPointChange(action);
+      });
+  });
+
   // Reset button
   resetBtn.addEventListener('click', resetPlayerPoints);
   
   // Custom input enter key
   customInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      applyCustomPoints();
+      applyCustomPointChange('add'); // Default to adding on Enter
     }
   });
   
@@ -455,6 +495,19 @@ function updateTimerDisplay(seconds) {
 document.addEventListener("DOMContentLoaded", () => {
   createPlayerPointsModal();
 
+  // Check for gamemaster rejoin info on page load
+  const rejoinInfoJSON = localStorage.getItem('gamemasterRejoinInfo');
+  if (rejoinInfoJSON) {
+      const rejoinInfo = JSON.parse(rejoinInfoJSON);
+      // We only need to check if the item exists. The server will validate the rest.
+      if (rejoinInfo.deviceId === deviceId) {
+          showRejoinButton(rejoinInfo);
+      } else {
+          // Clean up if deviceId doesn't match (e.g., user cleared cache but not this item)
+          localStorage.removeItem('gamemasterRejoinInfo');
+      }
+  }
+
   // Sound Toggle Setup
   const soundToggle = document.getElementById("toggle-sound");
   if (soundToggle) {
@@ -479,10 +532,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Room Creation Setup
   document.getElementById("create-room").addEventListener("click", () => {
     playerName = document.getElementById("player-name").value || "Showmaster";
+    const rejoinInfoJSON = localStorage.getItem('gamemasterRejoinInfo');
+
     socket.emit("create-room", {
       playerName: playerName,
       avatarId: currentAvatarId,
       deviceId: deviceId,
+       // If rejoin info exists, this is a "force create" action
+      forceCreate: !!rejoinInfoJSON
     });
     isGamemaster = true;
   });
@@ -503,28 +560,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     isGamemaster = false;
   });
-
-  // Modal close events
-  document.addEventListener('click', (e) => {
-    if (e.target.id === 'modal-overlay') {
-      closePlayerSettings();
-    }
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closePlayerSettings();
-    }
-  });
-
-  // Custom points enter key
-  document.getElementById('custom-points-input')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      applyCustomPoints();
-    }
-  });
-
-  
 
   // Buzzer Setup
   document.getElementById("buzzer").addEventListener("click", () => {
@@ -558,6 +593,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  
+  // Player Note Clear Button
+  const clearNoteBtn = document.getElementById("clear-note");
+  if (clearNoteBtn) {
+      clearNoteBtn.addEventListener("click", () => {
+          const noteField = document.getElementById("player-note");
+          if (noteField && !noteField.disabled) {
+              noteField.value = "";
+              // Trigger the input event to send the update to the server
+              noteField.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+      });
+  }
+
 
   // Timer Interface Setup
   const originalShowGameInterface = showGameInterface;
@@ -640,9 +689,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (rollButton) {
     rollButton.addEventListener("click", () => {
       if (isGamemaster) {
-        const min = parseInt(document.getElementById("min-number").value) || 0;
-        const max =
-          parseInt(document.getElementById("max-number").value) || 100;
+        // FIX START: Correctly parse numbers, allowing 0 as a valid input.
+        let min = parseInt(document.getElementById("min-number").value);
+        let max = parseInt(document.getElementById("max-number").value);
+
+        if (isNaN(min)) {
+            min = 0;
+        }
+        if (isNaN(max)) {
+            max = 100;
+        }
+        // FIX END
+
         console.log("Sending generate request:", { min, max });
         if (min > max) {
           alert("Minimum must be less than maximum");
@@ -671,6 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const lockAllBtn = document.getElementById("lock-all-answers");
   const unlockAllBtn = document.getElementById("unlock-all-answers");
+  const clearAllNotesBtn = document.getElementById("clear-all-notes");
 
   if (lockAllBtn) {
     lockAllBtn.addEventListener("click", () => {
@@ -683,13 +742,27 @@ document.addEventListener("DOMContentLoaded", () => {
       socket.emit("unlock-all-answers", { roomCode: currentRoomCode });
     });
   }
+  
+  if (clearAllNotesBtn) {
+    clearAllNotesBtn.addEventListener("click", () => {
+      socket.emit("clear-all-notes", { roomCode: currentRoomCode });
+    });
+  }
 
   // Page Leave Warning
   window.addEventListener("beforeunload", (event) => {
+    if (isGamemaster && currentRoomCode) {
+        const gamemasterInfo = {
+            playerName: playerName,
+            deviceId: deviceId,
+        };
+        localStorage.setItem('gamemasterRejoinInfo', JSON.stringify(gamemasterInfo));
+    }
+
     if (currentRoomCode) {
-      event.preventDefault();
-      event.returnValue = "Do you really want to leave the room?";
-      return event.returnValue;
+        event.preventDefault();
+        event.returnValue = "Do you really want to leave the room?";
+        return event.returnValue;
     }
   });
 });
@@ -698,10 +771,23 @@ document.addEventListener("DOMContentLoaded", () => {
 // Socket Event Handlers
 // ========================================
 socket.on("room-created", (data) => {
+  localStorage.removeItem('gamemasterRejoinInfo');
+  const rejoinButton = document.getElementById('rejoin-room');
+  if (rejoinButton) {
+      rejoinButton.remove();
+  }
+
   showGameInterface(data.roomCode, true);
 
   const leaderboard = document.getElementById("leaderboard");
   leaderboard.innerHTML = "<h3>Leaderboard</h3>";
+  
+  // Set initial buzzer status for gamemaster
+  const buzzerStatus = document.getElementById("current-buzzer");
+  if (buzzerStatus) {
+    buzzerStatus.innerHTML = "<div>Buzzers unlocked</div>";
+    buzzerStatus.classList.add("buzzer-free");
+  }
 
   const noPlayersDiv = document.createElement("div");
   noPlayersDiv.className = "waiting-message";
@@ -711,7 +797,16 @@ socket.on("room-created", (data) => {
 });
 
 socket.on("join-success", (data) => {
+  localStorage.removeItem('gamemasterRejoinInfo');
   showGameInterface(data.roomCode, false);
+  
+  // Set initial buzzer state for player
+  const buzzer = document.getElementById("buzzer");
+  if (buzzer) {
+    buzzer.disabled = false;
+    buzzer.classList.remove("buzzer-winner", "buzzer-disabled");
+    buzzer.classList.add("buzzer-active");
+  }
 });
 
 socket.on("player-list-update", (players) => {
@@ -727,6 +822,7 @@ socket.on("player-list-update", (players) => {
     playerDiv.className = `leaderboard-item ${
       index < 3 ? "rank-" + (index + 1) : ""
     }`;
+    playerDiv.dataset.playerId = player.id; // Add player ID for easy selection
 
     playerDiv.innerHTML = `
       <div class="rank">#${index + 1}</div>
@@ -767,6 +863,20 @@ socket.on("buzzer-pressed", (data) => {
   // Play buzzer sound
   playBuzzerSound();
 
+  // --- Highlight winner on leaderboard ---
+  // First, remove any existing highlight
+  const previouslyHighlighted = document.querySelector('.leaderboard-item.buzzer-winner-highlight');
+  if (previouslyHighlighted) {
+      previouslyHighlighted.classList.remove('buzzer-winner-highlight');
+  }
+
+  // Then, add highlight to the new winner
+  const winnerItem = document.querySelector(`.leaderboard-item[data-player-id="${data.playerId}"]`);
+  if (winnerItem) {
+      winnerItem.classList.add('buzzer-winner-highlight');
+  }
+  // --- End of highlight logic ---
+
   if (isGamemaster) {
     const buzzerStatus = document.getElementById("current-buzzer");
     buzzerStatus.innerHTML = `
@@ -783,6 +893,7 @@ socket.on("buzzer-pressed", (data) => {
     if (data.playerId === socket.id) {
       buzzer.classList.remove("buzzer-active");
       buzzer.classList.add("buzzer-winner");
+      buzzer.textContent = "BUZZED";
     } else {
       buzzer.classList.remove("buzzer-active");
       buzzer.classList.add("buzzer-disabled");
@@ -791,6 +902,13 @@ socket.on("buzzer-pressed", (data) => {
 });
 
 socket.on("buzzers-released", () => {
+    // --- Remove highlight from leaderboard ---
+    const highlightedItem = document.querySelector('.leaderboard-item.buzzer-winner-highlight');
+    if (highlightedItem) {
+        highlightedItem.classList.remove('buzzer-winner-highlight');
+    }
+    // --- End of remove highlight ---
+
   if (isGamemaster) {
     const buzzerStatus = document.getElementById("current-buzzer");
     buzzerStatus.innerHTML = "<div>Buzzers unlocked</div>";
@@ -798,12 +916,20 @@ socket.on("buzzers-released", () => {
   } else {
     const buzzer = document.getElementById("buzzer");
     buzzer.disabled = false;
+    buzzer.textContent = "BUZZ";
     buzzer.classList.remove("buzzer-winner", "buzzer-disabled");
     buzzer.classList.add("buzzer-active");
   }
 });
 
 socket.on("buzzers-locked", () => {
+    // --- Remove highlight from leaderboard ---
+    const highlightedItem = document.querySelector('.leaderboard-item.buzzer-winner-highlight');
+    if (highlightedItem) {
+        highlightedItem.classList.remove('buzzer-winner-highlight');
+    }
+    // --- End of remove highlight ---
+
   if (isGamemaster) {
     const buzzerStatus = document.getElementById("current-buzzer");
     buzzerStatus.innerHTML = "<div>Buzzers locked</div>";
@@ -892,18 +1018,29 @@ socket.on("timer-reset", () => {
 });
 
 socket.on("number-generated", (data) => {
-  // For players
-  const display = document.getElementById("random-number-display");
-  if (display) {
-    display.textContent = data.number;
+  console.log("Event received:", data);
+  const finalNumber = data.number;
+
+  // Find all display elements that need to be updated
+  const displays = [
+    document.getElementById("random-number-display"), // Player's display
+    document.getElementById("random-number-display-gm") // Gamemaster's display
+  ].filter(el => el); // Filter out any null elements just in case
+
+  // Check if there are any displays to update
+  if (!displays.length) {
+      console.error("Random number display elements not found.");
+      return;
   }
 
-  // For gamemaster
-  const gmDisplay = document.getElementById("random-number-display-gm");
-  if (gmDisplay) {
-    gmDisplay.textContent = data.number;
-  }
+  // Update each display with the final number and apply styling
+  displays.forEach(display => {
+    display.textContent = finalNumber;
+    // Apply final styling immediately, without animation
+    display.classList.add('final'); 
+  });
 });
+
 
 socket.on("player-answer-locked", (data) => {
   if (!isGamemaster && socket.id === data.playerId) {
@@ -937,4 +1074,28 @@ socket.on("all-answers-unlocked", () => {
 
 socket.on("room-error", (error) => {
   alert(error);
+});
+
+// New handlers for gamemaster disconnect/rejoin
+socket.on('gamemaster-disconnected', () => {
+    if (!isGamemaster) {
+        const banner = document.getElementById('gm-disconnect-banner');
+        if (banner) {
+            banner.classList.remove('hidden');
+        }
+    }
+});
+
+socket.on('gamemaster-rejoined', () => {
+    if (!isGamemaster) {
+        const banner = document.getElementById('gm-disconnect-banner');
+        if (banner) {
+            banner.classList.add('hidden');
+        }
+    }
+});
+
+socket.on('room-closed', () => {
+    alert('The room has been closed.');
+    window.location.reload();
 });
